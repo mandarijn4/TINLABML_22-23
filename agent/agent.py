@@ -11,7 +11,10 @@ data_dict_track = []
 data_dict_steer = []
 data_dict_accel = []
 data_dict_break = []
-data_tuple_angle = ()
+data_dict_lapTime = []
+min_accel = 0.0
+max_accel = 1.0
+temp_accel = 0.0
 
 # Initialize help messages
 ophelp = 'Options:\n'
@@ -34,7 +37,16 @@ version = "20130505-2"
 
 def drive_example(c):
     S, R = c.S.d, c.R.d
-    target_speed = 50
+    look_ahead_dist = 80
+    target_speed = 180
+    data_dict_angle.append(S['angle'])
+    data_dict_speed.append(S['speedX'])
+    data_dict_track.append(S['track'])
+    data_dict_steer.append(R['steer'])
+    data_dict_lapTime.append(S['curLapTime'])
+    data_dict_accel.append(R['accel'])
+    data_dict_break.append(R['brake'])
+    global temp_accel, min_accel, max_accel
 
     # Steer To Corner
     R['steer'] = S['angle'] * 10 / PI
@@ -42,21 +54,46 @@ def drive_example(c):
     R['steer'] -= S['trackPos'] * .10
 
     # Throttle Control
-    if S['speedX'] < target_speed - (R['steer'] * 50):
-        R['accel'] += 10
+    if S['speedX'] < 10:
+        R['accel'] = 0.9
+    elif S['speedX'] < target_speed - (R['steer'] * 50) and R['brake'] == 0:
+        temp_accel = temp_accel + 0.01
+        accel_constrain = lambda n, minn, maxx: max(min(n, maxx), minn)
+        print("temp_accel: ", temp_accel)
+        print("accel constrain: ", accel_constrain(temp_accel, min_accel, max_accel))
+        R['accel'] = accel_constrain(temp_accel, min_accel, max_accel)
     else:
         R['accel'] -= .01
-    if S['speedX'] < 10:
-        R['accel'] += 1 / (S['speedX'] + .1)
 
     # Traction Control System
     if ((S['wheelSpinVel'][2] + S['wheelSpinVel'][3]) -
             (S['wheelSpinVel'][0] + S['wheelSpinVel'][1]) > 5):
         R['accel'] -= .2
 
+    if S['speedX'] < 50:
+        look_ahead_dist = 20
+    else:
+        look_ahead_dist = 60
+    if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 40:
+        temp_accel = 0.5
+        R['accel'] = temp_accel
+    if S['track'][9] < look_ahead_dist and S['track'][10] < look_ahead_dist and S['track'][11] < look_ahead_dist and S['speedX'] > 40:
+        R['brake'] += 0.01
+        R['accel'] = 0
+        temp_accel = 0.0
+    else:
+        R['brake'] = 0
+    
+    if S['trackPos'] > 1:
+        R['steer'] = -0.8
+        R['accel'] = 0.3
+    elif S['trackPos'] < -1:
+        R['steer'] = 0.8
+        R['accel'] = 0.3
+    
     # Automatic Transmission
     R['gear'] = 1
-    if S['speedX'] > 50:
+    if S['speedX'] > 40:
         R['gear'] = 2
     if S['speedX'] > 80:
         R['gear'] = 3
@@ -66,33 +103,13 @@ def drive_example(c):
         R['gear'] = 5
     if S['speedX'] > 170:
         R['gear'] = 6
-
-
+    
     print("angle: ", S['angle'])
     print("trackPos: ", S['trackPos'])
     print("track: ", S['track'])
-
-    # data_tuple_angle = tuple(data_dict_angle)
-    # data_dict_angle.append(data_tuple_angle)
-    data_dict_angle.append(S['angle'])
-    data_dict_speed.append(S['speedX'])
-    data_dict_track.append(S['track'])
-    data_dict_steer.append(R['steer'])
-    data_dict_accel.append(R['accel'])
-    data_dict_break.append(R['brake'])
-
-    # print every 50 steps the focus sensor
-    if c.maxSteps % 50 == 0:
-        if S['focus'][0] != -1:
-            print("focus: ", S['focus'])
-        else:
-            print("!!!")
-
-
-    if S['trackPos'] < 0.5 or S['trackPos'] < -0.5:
-        R['break'] = 1
-    else:
-        R['break'] = 0
+    print("accel: ", R['accel'])
+    print("brake: ", R['brake'])
+    print("steer: ", R['steer'], "\n")
     return
 
 if __name__ == "__main__":
