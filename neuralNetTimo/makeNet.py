@@ -66,8 +66,10 @@ for row in target_vars:
     del row[Data.ACCEL.value:Data.ACCEL.value+Data.TRACK_AMOUNT.value+2]
     del row[Data.ANGLE.value: Data.SPEED.value + 1]
 
-input = input_vars[100:10000]
-target = target_vars[100:10000]
+# input = input_vars[100:10000]
+# target = target_vars[100:10000]
+input = input_vars
+target = target_vars
 input_ranges = input_vars_ranges
 
 # print("_______")
