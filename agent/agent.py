@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from dataLogger import CsvWriter
 from client import Client
+from neuralnet import Neuralnet
 
 PI = 3.14159265359
 
@@ -34,6 +35,7 @@ usage = 'Usage: %s [ophelp [optargs]] \n' % sys.argv[0]
 usage = usage + ophelp
 version = "20130505-2"
 
+nn = Neuralnet()
 
 def drive_example(c):
     S, R = c.S.d, c.R.d
@@ -103,6 +105,12 @@ def drive_example(c):
         R['gear'] = 5
     if S['speedX'] > 170:
         R['gear'] = 6
+
+    par = []
+    par.append(S['angle'])
+    par.append(S['speedX'])
+    par = par + S['track']
+    R['steer'] = nn.get_steering(par)
     
     print("angle: ", S['angle'])
     print("trackPos: ", S['trackPos'])
