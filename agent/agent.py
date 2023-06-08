@@ -11,6 +11,7 @@ data_dict_track = []
 data_dict_steer = []
 data_dict_accel = []
 data_dict_break = []
+data_dict_trackpos = []
 data_dict_lapTime = []
 min_accel = 0.0
 max_accel = 1.0
@@ -46,6 +47,7 @@ def drive_example(c):
     data_dict_lapTime.append(S['curLapTime'])
     data_dict_accel.append(R['accel'])
     data_dict_break.append(R['brake'])
+    data_dict_trackpos.append(S['trackPos'])
     global temp_accel, min_accel, max_accel
 
     # Steer To Corner
@@ -123,4 +125,4 @@ if __name__ == "__main__":
             C.respond_to_server()
     C.shutdown()
     print("===============================================")
-    CsvWriter.write_csv_file(data_dict_angle, data_dict_speed, data_dict_track, data_dict_steer, data_dict_accel, data_dict_break)
+    CsvWriter.write_csv_file(data_dict_lapTime, data_dict_angle, data_dict_speed, data_dict_track, data_dict_steer, data_dict_accel, data_dict_break, data_dict_trackpos)
