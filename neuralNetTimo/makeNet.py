@@ -41,69 +41,36 @@ class DataFile():
             row_as_list = list(row_as_np_float) # make list
             # add row to list
             self.file_as_list.append(row_as_list)
-
 data = DataFile()
 
 data.loadFile()
-
-
 
 # remove output variables -> input values
 input_vars = copy.deepcopy(data.file_as_list)
 for row in input_vars:
     del row[Data.STEER.value:Data.BRAKE.value + 1]
-    # keep angle and speed
-    
-    # del row[Data.TRACK.value + 11: Data.TRACK.value + Data.TRACK_AMOUNT.value]
-    # del row[Data.TRACK.value: Data.TRACK.value + 8]
-    # del row[Data.STEER.value: Data.BRAKE.value + 1]
-    # del row[Data.SPEED.value]
-    # del row[Data.ANGLE.value: Data.POSITION.value + 1]
 
 input_vars_ranges = copy.deepcopy(DataFile.input_ranges)
 del input_vars_ranges[Data.STEER.value:Data.BRAKE.value + 1]
-# del input_vars_ranges[Data.TRACK.value + 11: Data.TRACK.value + Data.TRACK_AMOUNT.value]
-# del input_vars_ranges[Data.TRACK.value: Data.TRACK.value + 8]
-# del input_vars_ranges[Data.STEER.value: Data.BRAKE.value + 1]
-# del input_vars_ranges[Data.SPEED.value]
-# del input_vars_ranges[Data.ANGLE.value: Data.POSITION.value + 1]
 
-# remove inputs -> target values
-# target_vars = copy.deepcopy(data.file_as_list)
-# for row in target_vars:
-#     del row[Data.TRACK.value:Data.TRACK.value+Data.TRACK_AMOUNT.value]
-#     del row[Data.ANGLE.value: Data.SPEED.value + 1]
-
+# remove input variables -> output values
 target_vars = copy.deepcopy(data.file_as_list)
 for row in target_vars:
-    del row[Data.BRAKE.value:Data.BRAKE.value+Data.TRACK_AMOUNT.value+2]
+    del row[Data.TRACK.value: Data.TRACK.value+Data.TRACK_AMOUNT.value]
     del row[Data.ANGLE.value: Data.STEER.value + 1]
 
-# input = input_vars[418:433] + input_vars[110:150]
-# target = target_vars[418:433] + target_vars[110:150]
 input = input_vars
 target = target_vars
 input_ranges = input_vars_ranges
 
-# for i in range(0,50):
-#     print(i, target[i], input[i])
-
-# print("_______")
-# print(target)
-# Create network with 21 inputs, 0 neurons in input layer and 3 in output layer
-
-net = nl.net.newff(input_ranges, [1])
-# net = nl.net.newff(input_ranges, [1])
+# Create network with 22 inputs, 0 neurons in input layer and 2 in output layer
+net = nl.net.newff(input_ranges, [2])
 err = net.train(input, target, goal=0.01, show=10)
 
-# test = [0.00678694, 100.05, 3.93779, 4.08413, 5.16986, 6.93252, 11.7321, 15.6098, 23.5846, 47.1353, 74.4002, 81.1555, 87.8839, 135.784, 33.6182, 22.8448, 17.4009, 10.4681, 7.86914, 6.26491, 6.06244]
-for i in range(0, len(target), 10):
-    test = input[i]
-    if target[i] - net.sim([test]) > 0.01:
-        print(i, target[i], net.sim([test]))
+print("output: ", net.sim([input[0]]))
 
 # save the net to a file
-with open("save_netACCEL.pickle", "wb") as f:
+with open("save_netACCELBRAKE.pickle", "wb") as f:
     f.write(pickle.dumps(net))
 
 print("net is made and saved")
