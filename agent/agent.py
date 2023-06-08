@@ -2,7 +2,6 @@ import sys
 import numpy as np
 from dataLogger import CsvWriter
 from client import Client
-# from neuralnet import Neuralnet
 
 PI = 3.14159265359
 
@@ -36,8 +35,6 @@ usage = 'Usage: %s [ophelp [optargs]] \n' % sys.argv[0]
 usage = usage + ophelp
 version = "20130505-2"
 
-# nn = Neuralnet()
-
 def drive_example(c):
     S, R = c.S.d, c.R.d
     look_ahead_dist = 60
@@ -69,11 +66,6 @@ def drive_example(c):
     else:
         R['accel'] -= .05
 
-    # Traction Control System
-    # if ((S['wheelSpinVel'][2] + S['wheelSpinVel'][3]) -
-    #         (S['wheelSpinVel'][0] + S['wheelSpinVel'][1]) > 5):
-    #     R['accel'] -= .05
-
     if S['speedX'] < 80 and S['speedX'] > 55:
         look_ahead_dist = 25
     elif S['speedX'] < 55:
@@ -86,6 +78,7 @@ def drive_example(c):
         look_ahead_dist = 6
     else:
         look_ahead_dist = 80
+
     if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 200:
         R['accel'] = 0
         temp_accel = 0.0
@@ -100,17 +93,13 @@ def drive_example(c):
         R['brake'] += 0.03
         R['accel'] = 0
         temp_accel = 0.0
-    elif S['track'][4]> 40 and S['track'][9] < look_ahead_dist and S['track'][10] < look_ahead_dist and S['track'][11] < look_ahead_dist and S['speedX'] > 50:
-        temp_accel = 0.25
+    elif S['track'][4]> 40 and S['speedX'] > 40:
+        temp_accel = 0.8
         R['accel'] = temp_accel
         R['brake'] = 0
     else:
         R['brake'] = 0
 
-
-# [6.37343, 7.56634, 55.2368, 33.8321, 15.0906, 12.7247, 11.0729, 9.86444, 9.05193, 8.862, 8.67728, 7.98971, 7.2402, 6.60215, 6.0625, 4.90771, 4.24073, 3.78893, 3.80842]
-
-    
     # out of the track
     if S['trackPos'] > 1:
         R['steer'] = -0.8
@@ -127,24 +116,6 @@ def drive_example(c):
 
     if R['gear'] < 1:
         R['gear'] = 1
-
-    # if S['speedX'] > 40:
-    #     R['gear'] = 2
-    # if S['speedX'] > 80:
-    #     R['gear'] = 3
-    # if S['speedX'] > 110:
-    #     R['gear'] = 4
-    # if S['speedX'] > 140:
-    #     R['gear'] = 5
-    # if S['speedX'] > 170:
-    #     R['gear'] = 6
-
-    # par = []
-    # par.append(S['angle'])
-    # par.append(S['trackPos'])
-    # par.append(S['speedX'])
-    # par = par + S['track']
-    # R['steer'] = nn.get_steering(par)
     
     print("angle: ", S['angle'])
     print("trackPos: ", S['trackPos'])
