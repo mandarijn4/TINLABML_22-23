@@ -2,7 +2,7 @@ import sys
 import numpy as np
 from dataLogger import CsvWriter
 from client import Client
-from neuralnet import Neuralnet
+# from neuralnet import Neuralnet
 
 PI = 3.14159265359
 
@@ -53,14 +53,14 @@ def drive_example(c):
     global temp_accel, min_accel, max_accel
 
     # Steer To Corner
-    R['steer'] = S['angle'] * 10 / PI
+    R['steer'] = S['angle'] * 25 / PI
     # Steer To Center
-    R['steer'] -= S['trackPos'] * .40
+    R['steer'] -= S['trackPos'] * .35
 
-    # Throttle Control
-    if S['speedX'] < 120: #90
+    # Throttle Control for starting the system
+    if S['speedX'] < 90: 
         R['accel'] = 1
-    elif S['speedX'] < target_speed - (R['steer'] * 40) and R['brake'] == 0:
+    elif S['speedX'] < target_speed - (R['steer'] * 40) and R['brake'] == 0: 
         temp_accel = temp_accel + 0.05
         accel_constrain = lambda n, minn, maxx: max(min(n, maxx), minn)
         print("temp_accel: ", temp_accel)
@@ -74,28 +74,42 @@ def drive_example(c):
     #         (S['wheelSpinVel'][0] + S['wheelSpinVel'][1]) > 5):
     #     R['accel'] -= .05
 
-    if S['speedX'] < 120:
-        look_ahead_dist = 20
-    elif S['speedX'] < 140:
+    if S['speedX'] < 80 and S['speedX'] > 55:
+        look_ahead_dist = 25
+    elif S['speedX'] < 55:
+        look_ahead_dist = 10
+    elif S['speedX'] > 80 and S['speedX'] < 100:
         look_ahead_dist = 40
-    elif S['speedX'] > 175:
-        look_ahead_dist = 80
-    elif S['speedX'] > 190:
-        look_ahead_dist = 140
+    elif S['speedX'] > 130:
+        look_ahead_dist = 110
+    elif S['track'][2] > 40 or S['track'][15] > 40:
+        look_ahead_dist = 6
     else:
-        look_ahead_dist = 60
-    if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 180:
+        look_ahead_dist = 80
+    if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 200:
         R['accel'] = 0
         temp_accel = 0.0
     elif S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 50:
         temp_accel = 0.6
         R['accel'] = temp_accel
-    if S['track'][9] < look_ahead_dist and S['track'][10] < look_ahead_dist and S['track'][11] < look_ahead_dist and S['speedX'] > 50:
+    if S['track'][2] > 40 or S['track'][15] > 40:
+        temp_accel = 0.5
+        R['accel'] = temp_accel
+        R['brake'] = 0
+    elif S['track'][9] < look_ahead_dist and S['track'][10] < look_ahead_dist and S['track'][11] < look_ahead_dist and S['speedX'] > 50:
         R['brake'] += 0.03
         R['accel'] = 0
         temp_accel = 0.0
+    elif S['track'][4]> 40 and S['track'][9] < look_ahead_dist and S['track'][10] < look_ahead_dist and S['track'][11] < look_ahead_dist and S['speedX'] > 50:
+        temp_accel = 0.25
+        R['accel'] = temp_accel
+        R['brake'] = 0
     else:
         R['brake'] = 0
+
+
+# [6.37343, 7.56634, 55.2368, 33.8321, 15.0906, 12.7247, 11.0729, 9.86444, 9.05193, 8.862, 8.67728, 7.98971, 7.2402, 6.60215, 6.0625, 4.90771, 4.24073, 3.78893, 3.80842]
+
     
     # out of the track
     if S['trackPos'] > 1:
@@ -106,7 +120,6 @@ def drive_example(c):
         R['accel'] = 0.3
     
     # Automatic Transmission
-    
     if S['rpm'] > 8000:
         R['gear'] = S['gear'] + 1
     elif S['rpm'] < 2500:
