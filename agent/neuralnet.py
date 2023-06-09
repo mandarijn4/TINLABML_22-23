@@ -10,11 +10,22 @@ import pickle
 
 class Neuralnet():
     def __init__(self):
-        # Load the net from a file
-        with open("save_net.pickle", "rb") as f:
-            self.net = pickle.load(f)
+        with open("save_netACCELBRAKESTEER.pickle", "rb") as f:
+            self.netACCELBRAKESTEER = pickle.load(f)
 
     def get_steering(self, par):
-        return self.net.sim([par])
+        return self.netACCELBRAKESTEER.sim([par])[0][0]
+
+    def get_acceleration(self, par):
+        return self.netACCELBRAKESTEER.sim([par])[0][1]
+
+    def get_brake(self, par):
+        return self.netACCELBRAKESTEER.sim([par])[0][2]
+    
+    def get_all_controls(self,par):
+        return self.netACCELBRAKESTEER.sim([par])[0]
+    
+
+
 
 
