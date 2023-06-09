@@ -57,20 +57,20 @@ del input_vars_ranges[Data.STEER.value:Data.BRAKE.value + 1]
 target_vars = copy.deepcopy(data.file_as_list)
 for row in target_vars:
     del row[Data.TRACK.value: Data.TRACK.value+Data.TRACK_AMOUNT.value]
-    del row[Data.ANGLE.value: Data.STEER.value + 1]
+    del row[Data.ANGLE.value: Data.SPEED.value + 1]
 
 input = input_vars
 target = target_vars
 input_ranges = input_vars_ranges
 
 # Create network with 22 inputs, 0 neurons in input layer and 2 in output layer
-net = nl.net.newff(input_ranges, [2])
+net = nl.net.newff(input_ranges, [3])
 err = net.train(input, target, goal=0.01, show=10)
 
 print("output: ", net.sim([input[0]]))
 
 # save the net to a file
-with open("save_netACCELBRAKE.pickle", "wb") as f:
+with open("save_netACCELBRAKESTEER.pickle", "wb") as f:
     f.write(pickle.dumps(net))
 
 print("net is made and saved")
