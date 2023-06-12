@@ -64,13 +64,20 @@ target = target_vars
 input_ranges = input_vars_ranges
 
 # Create network with 22 inputs, 0 neurons in input layer and 2 in output layer
-net = nl.net.newff(input_ranges, [3])
-err = net.train(input, target, goal=0.01, show=10)
+if False:
+    net = nl.net.newff(input_ranges, [23, 23, 15, 3])
+else:
+    with open("speedway1.1.pickle", "rb") as f:
+        net = pickle.load(f)
+
+# with open("save_net.pickle", "rb") as f:
+#     net = pickle.load(f)
+err = net.train(input, target, goal=0.01, show=10, epochs=1000)
 
 print("output: ", net.sim([input[0]]))
 
 # save the net to a file
-with open("save_netACCELBRAKESTEER.pickle", "wb") as f:
+with open("speedway1.1.pickle", "wb") as f:
     f.write(pickle.dumps(net))
 
 print("net is made and saved")

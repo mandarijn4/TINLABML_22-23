@@ -1,5 +1,5 @@
 """ 
-import by agent
+ADD THIS FILE TO THE SAME FOLDER AS THE AGENT
 ==============================
 
 """
@@ -8,13 +8,34 @@ import numpy as np
 import neurolab as nl
 import pickle
 
-# Load the net from a file
-with open("save_net.pickle", "rb") as f:
-    net = pickle.load(f)
+class Neuralnet():
+    def __init__(self):
+        with open("speedway1.1.pickle", "rb") as f: #
+            self.netACCELBRAKESTEER = pickle.load(f)
 
-print("net is loaded, do tests: ")
+    def get_steering(self, par):
+        return self.netACCELBRAKESTEER.sim([par])[0][0]
 
-test = [0.00678694, 100.05, 3.93779, 4.08413, 5.16986, 6.93252, 11.7321, 15.6098, 23.5846, 47.1353, 74.4002, 81.1555, 87.8839, 135.784, 33.6182, 22.8448, 17.4009, 10.4681, 7.86914, 6.26491, 6.06244]
+    def get_acceleration(self, par):
+        return self.netACCELBRAKESTEER.sim([par])[0][1]
 
-print(net.sim([test]))
+    def get_brake(self, par):
+        return self.netACCELBRAKESTEER.sim([par])[0][2]
+    
+""" ADD THIS TO THE AGENT.PY !!!!"""
+
+# from neuralnet import Neuralnet
+
+""" ADD THIS TO THE FUNCTION def drive_example(c): """
+# par = []
+# par.append(S['angle'])
+# par.append(S['trackPos'])
+# par.append(S['speedX'])
+# par = par + S['track']
+# print([par])
+# R['steer'] = nn.get_steering(par) 
+# R['accel'] = nn.get_acceleration(par)
+# R['brake'] = nn.get_brake(par)
+
+
 
