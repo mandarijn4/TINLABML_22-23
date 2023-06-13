@@ -2,9 +2,9 @@ import sys
 import numpy as np
 from dataLogger import CsvWriter
 from client import Client
+import argparse
 
 PI = 3.14159265359
-
 data_dict_angle = []
 data_dict_speed = []
 data_dict_track = []
@@ -13,27 +13,14 @@ data_dict_accel = []
 data_dict_trackpos = []
 data_dict_break = []
 data_dict_lapTime = []
+data_dict_rpm = []
+data_dict_gear = []
 min_accel = 0.0
 max_accel = 1.0
 temp_accel = 0.0
-
-# Initialize help messages
-ophelp = 'Options:\n'
-ophelp += ' --host, -H <host>    TORCS server host. [localhost]\n'
-ophelp += ' --port, -p <port>    TORCS port. [3001]\n'
-ophelp += ' --id, -i <id>        ID for server. [SCR]\n'
-ophelp += ' --steps, -m <#>      Maximum simulation steps. 1 sec ~ 50 steps. [100000]\n'
-ophelp += ' --episodes, -e <#>   Maximum learning episodes. [1]\n'
-ophelp += ' --track, -t <track>  Your name for this track. Used for learning. [unknown]\n'
-ophelp += ' --stage, -s <#>      0=warm up, 1=qualifying, 2=race, 3=unknown. [3]\n'
-ophelp += ' --file, -f <name>    parameter file name [default_parameters]\n'
-ophelp += ' --debug, -d          Output full telemetry.\n'
-ophelp += ' --help, -h           Show this help.\n'
-ophelp += ' --version, -v        Show current version.\n'
-ophelp += ' --rounds, -r         Total number of rounds.\n'
-usage = 'Usage: %s [ophelp [optargs]] \n' % sys.argv[0]
-usage = usage + ophelp
-version = "20130505-2"
+temp_steer = 0.0
+min_steer = -1.0
+max_steer = 1.0
 
 def drive_example(c):
     S, R = c.S.d, c.R.d
@@ -47,12 +34,17 @@ def drive_example(c):
     data_dict_lapTime.append(S['curLapTime'])
     data_dict_accel.append(R['accel'])
     data_dict_break.append(R['brake'])
+    data_dict_rpm.append(S['rpm'])
+    data_dict_gear.append(S['gear'])
     global temp_accel, min_accel, max_accel
-
-    # Steer To Corner
-    R['steer'] = S['angle'] * 25 / PI
-    # Steer To Center
-    R['steer'] -= S['trackPos'] * .35
+    
+    # Steer To Center and Corner
+    if S['speedX'] < 80:
+        R['steer'] = S['angle'] * 15 / PI # corner
+    else:
+        R['steer'] = S['angle'] * 25 / PI # corner
+        
+    R['steer'] -= S['trackPos'] * .05 # center
 
     # Throttle Control for starting the system
     if S['speedX'] < 90: 
@@ -79,11 +71,11 @@ def drive_example(c):
     else:
         look_ahead_dist = 80
 
-    if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 200:
+    if S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 160:
         R['accel'] = 0
         temp_accel = 0.0
     elif S['track'][9] < look_ahead_dist * 2 and S['track'][10] < look_ahead_dist * 2 and S['track'][11] < look_ahead_dist * 2 and S['speedX'] > 50:
-        temp_accel = 0.6
+        temp_accel = 0.3
         R['accel'] = temp_accel
     if S['track'][2] > 40 or S['track'][15] > 40:
         temp_accel = 0.5
@@ -122,18 +114,74 @@ def drive_example(c):
     print("track: ", S['track'])
     print("accel: ", R['accel'])
     print("brake: ", R['brake'])
-    print("steer: ", R['steer'], "\n")
+    print("steer: ", R['steer'])
+    print("Track 10: ", S['track'][10], "\n")
     return
+
+def new_driver(c):
+    S, R = c.S.d, c.R.d
+    global temp_steer, min_steer, max_steer
+       # Steer To Corner
+    R['steer'] = S['angle'] * 25 / PI
+    # Steer To Center
+    R['steer'] -= S['trackPos'] * .35
+    # if S['track'][0] < S['track'][18] or S['track'][0] > S['track'][18] and S['speedX'] > 35:
+        # temp_steer = R['steer'] - S['trackPos'] * .25
+        # steer_constrain = lambda n, minn, maxx: max(min(n, maxx), minn)
+        # R['steer'] = steer_constrain(temp_steer, min_steer, max_steer)
+        
+    if S['track'][5] < S['track'][14] and S['track'][10] < 80:
+        print("corner ahead to the right")
+        R['steer'] = -.5
+        print(S['track'][14] - S['track'][5])
+    elif S['track'][5] > S['track'][14] and S['track'][10] < 80:
+        print("corner ahead to the left")
+        print(S['track'][5] - S['track'][14])
+        R['steer'] = .5
+    else:
+        print("no corner ahead")
+        R['steer'] = 0
+
+
+
+    R['accel'] = 1.0
+    if S['track'][10] < 200 and S['track'][10] > 150:
+        R['accel'] = 0
+    elif S['track'][10] < 150 and S['track'][10] > 100 and S['speedX'] > 100:
+        R['brake'] = .1
+    elif S['track'][10] < 100 and S['track'][10] > 50 and S['speedX'] > 80:
+        R['brace'] = .25
+    elif S['track'][10] < 50 and S['track'][10] > 20 and S['speedX'] > 60:
+        R['brake'] = .5
+    
+    if S['speedX'] < 50:
+        R['brake'] = 0
+    # Automatic Transmission
+    if S['rpm'] > 8000:
+        R['gear'] = S['gear'] + 1
+    elif S['rpm'] < 2500:
+        R['gear'] = S['gear'] - 1
+
+    if R['gear'] < 1:
+        R['gear'] = 1
+
+    
+    print("Steer: ", R['steer'])
 
 if __name__ == "__main__":
     print("===============================================")
-    C = Client()
+    parser = argparse.ArgumentParser(description='Give the host and port to connect to server, default: localhost:3001')
+    parser.add_argument('--host', type=str, default='localhost', help='ip to connect to Server,   default: localhost')
+    parser.add_argument('--port', type=int, default=3001, help='Port to connect to Server, default: 3001')
+    args = parser.parse_args()
+    C = Client(H=args.host, p=args.port)
     count = 0
     for step in range(C.maxSteps, 0, -1):
         C.get_servers_input()
         if step % 3 == 0:
             drive_example(C)
+            # new_driver(C)
             C.respond_to_server()
     C.shutdown()
     print("===============================================")
-    CsvWriter.write_csv_file(data_dict_lapTime, data_dict_angle, data_dict_speed, data_dict_track, data_dict_steer, data_dict_accel, data_dict_break, data_dict_trackpos)
+    CsvWriter.write_csv_file(data_dict_lapTime, data_dict_angle, data_dict_speed, data_dict_track, data_dict_steer, data_dict_accel, data_dict_break, data_dict_trackpos, data_dict_rpm, data_dict_gear)
