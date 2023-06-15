@@ -48,24 +48,6 @@ class DriverAction():
             out += ')'
         return out
         return out + '\n'
-
-    def fancyout(self):
-        '''Specialty output for useful monitoring of bot's effectors.'''
-        out = str()
-        od = self.d.copy()
-        od.pop('gear', '')  # Not interesting.
-        od.pop('meta', '')  # Not interesting.
-        od.pop('focus', '')  # Not interesting. Yet.
-        for k in sorted(od):
-            if k == 'clutch' or k == 'brake' or k == 'accel':
-                strout = ''
-                strout = '%6.3f %s' % (od[k], bargraph(od[k], 0, 1, 50, k[0].upper()))
-            elif k == 'steer':  # Reverse the graph to make sense.
-                strout = '%6.3f %s' % (od[k], bargraph(od[k] * -1, -1, 1, 50, 'S'))
-            else:
-                strout = str(od[k])
-            out += "%s: %s\n" % (k, strout)
-        return out
     
     def clip(self, v, lo, hi):
         if v < lo:

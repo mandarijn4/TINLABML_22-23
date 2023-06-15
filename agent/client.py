@@ -30,9 +30,6 @@ class Client():
         self.R = DriverAction()
         self.P = None
 
-        if f: self.pfilename = f
-        pfile = open(self.pfilename, 'r')
-        self.P = json.load(pfile)
         self.setup_connection()
 
     def setup_connection(self):
