@@ -1,5 +1,14 @@
 # TINLABML_22-23
 
+## Introduction
+
+For this project we have learned how to use and make a neural network.
+We have used the neurolab library to create a neural network that can drive a car on a circuit.
+The neural network is trained using a supervised learning method, where the neural network is trained on a dataset of driving data.
+First we have made a car that can drive around the circuit and collecting data.
+After that we have used the collected data to train the neural network.
+The neural network is trained to drive the car around the circuit as nice as possible, without crashing.
+
 ## Dependencies  
 
 -   python 3.8.10
