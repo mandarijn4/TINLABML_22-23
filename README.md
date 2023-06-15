@@ -40,4 +40,4 @@ Than you can run the code with the following command:
 <br>
 ### Disclaimer
 The code is provided as is, without any warranty. Use it at your own risk!
-It is tested with the provided dependencies, using different versions may cause unexpected behaviour.
+It is tested with the provided dependencies, using different versions may cause unexpected behavior.
