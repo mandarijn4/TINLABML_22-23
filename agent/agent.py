@@ -2,6 +2,7 @@ import sys
 import numpy as np
 from dataLogger import CsvWriter
 from client import Client
+from neuralnet import Neuralnet
 import argparse
 
 PI = 3.14159265359
@@ -168,6 +169,32 @@ def new_driver(c):
     
     print("Steer: ", R['steer'])
 
+def ai_driver(c):
+    S, R = c.S.d, c.R.d
+    nn = Neuralnet()
+    par = []
+    par.append(S['angle'])
+    par.append(S['trackPos'])
+    par.append(S['speedX'])
+    par = par + S['track']
+    print([par])
+    R['steer'] = nn.get_steering(par) 
+    R['accel'] = nn.get_acceleration(par)
+    R['brake'] = nn.get_brake(par)
+
+    # Automatic Transmission
+    if S['rpm'] > 8000:
+        R['gear'] = S['gear'] + 1
+    elif S['rpm'] < 2500:
+        R['gear'] = S['gear'] - 1
+
+    if R['gear'] < 1:
+        R['gear'] = 1
+
+    print("Steer: ", R['steer'])
+    print("Accel: ", R['accel'])
+    print("Brake: ", R['brake'])
+
 if __name__ == "__main__":
     print("===============================================")
     parser = argparse.ArgumentParser(description='Give the host and port to connect to server, default: localhost:3001')
@@ -179,8 +206,9 @@ if __name__ == "__main__":
     for step in range(C.maxSteps, 0, -1):
         C.get_servers_input()
         if step % 3 == 0:
-            drive_example(C)
+            # drive_example(C)
             # new_driver(C)
+            ai_driver(C)
             C.respond_to_server()
     C.shutdown()
     print("===============================================")
