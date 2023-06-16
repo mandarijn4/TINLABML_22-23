@@ -1,9 +1,7 @@
-import sys
-import numpy as np
+import argparse
 from dataLogger import CsvWriter
 from client import Client
 from neuralnet import Neuralnet
-import argparse
 
 PI = 3.14159265359
 data_dict_angle = []
@@ -23,10 +21,22 @@ temp_steer = 0.0
 min_steer = -1.0
 max_steer = 1.0
 
+
+def automatic_transmission(gear, rpm):
+    """This function will automatically gear up and down"""
+    if rpm > 8000:
+        gear += 1
+    elif rpm < 2500:
+        gear -= 1
+    if gear < 1:
+        gear = 1
+    return gear
+
+
 def drive_example(c):
     S, R = c.S.d, c.R.d
     look_ahead_dist = 60
-    target_speed = 250 #180
+    target_speed = 250  # 180
     data_dict_angle.append(S['angle'])
     data_dict_speed.append(S['speedX'])
     data_dict_track.append(S['track'])
@@ -38,21 +48,21 @@ def drive_example(c):
     data_dict_rpm.append(S['rpm'])
     data_dict_gear.append(S['gear'])
     global temp_accel, min_accel, max_accel
-    
+
+    R['gear'] = automatic_transmission(R['gear'], S['rpm'])
     # Steer To Center and Corner
     if S['speedX'] < 80:
-        R['steer'] = S['angle'] * 15 / PI # corner
+        R['steer'] = S['angle'] * 15 / PI  # corner
     else:
-        R['steer'] = S['angle'] * 25 / PI # corner
-        
-    R['steer'] -= S['trackPos'] * .05 # center
+        R['steer'] = S['angle'] * 25 / PI  # corner
+    R['steer'] -= S['trackPos'] * .05  # center
 
     # Throttle Control for starting the system
-    if S['speedX'] < 90: 
+    if S['speedX'] < 90:
         R['accel'] = 1
-    elif S['speedX'] < target_speed - (R['steer'] * 40) and R['brake'] == 0: 
+    elif S['speedX'] < target_speed - (R['steer'] * 40) and R['brake'] == 0:
         temp_accel = temp_accel + 0.05
-        accel_constrain = lambda n, minn, maxx: max(min(n, maxx), minn)
+        def accel_constrain(n, minn, maxx): return max(min(n, maxx), minn)
         print("temp_accel: ", temp_accel)
         print("accel constrain: ", accel_constrain(temp_accel, min_accel, max_accel))
         R['accel'] = accel_constrain(temp_accel, min_accel, max_accel)
@@ -86,7 +96,7 @@ def drive_example(c):
         R['brake'] += 0.03
         R['accel'] = 0
         temp_accel = 0.0
-    elif S['track'][4]> 40 and S['speedX'] > 40:
+    elif S['track'][4] > 40 and S['speedX'] > 40:
         temp_accel = 0.8
         R['accel'] = temp_accel
         R['brake'] = 0
@@ -100,16 +110,7 @@ def drive_example(c):
     elif S['trackPos'] < -1:
         R['steer'] = 0.8
         R['accel'] = 0.3
-    
-    # Automatic Transmission
-    if S['rpm'] > 8000:
-        R['gear'] = S['gear'] + 1
-    elif S['rpm'] < 2500:
-        R['gear'] = S['gear'] - 1
 
-    if R['gear'] < 1:
-        R['gear'] = 1
-    
     print("angle: ", S['angle'])
     print("trackPos: ", S['trackPos'])
     print("track: ", S['track'])
@@ -119,18 +120,17 @@ def drive_example(c):
     print("Track 10: ", S['track'][10], "\n")
     return
 
+
 def new_driver(c):
     S, R = c.S.d, c.R.d
     global temp_steer, min_steer, max_steer
-       # Steer To Corner
+
+    R['gear'] = automatic_transmission(R['gear'], S['rpm'])
+    # Steer To Corner
     R['steer'] = S['angle'] * 25 / PI
     # Steer To Center
     R['steer'] -= S['trackPos'] * .35
-    # if S['track'][0] < S['track'][18] or S['track'][0] > S['track'][18] and S['speedX'] > 35:
-        # temp_steer = R['steer'] - S['trackPos'] * .25
-        # steer_constrain = lambda n, minn, maxx: max(min(n, maxx), minn)
-        # R['steer'] = steer_constrain(temp_steer, min_steer, max_steer)
-        
+
     if S['track'][5] < S['track'][14] and S['track'][10] < 80:
         print("corner ahead to the right")
         R['steer'] = -.5
@@ -143,8 +143,6 @@ def new_driver(c):
         print("no corner ahead")
         R['steer'] = 0
 
-
-
     R['accel'] = 1.0
     if S['track'][10] < 200 and S['track'][10] > 150:
         R['accel'] = 0
@@ -154,20 +152,11 @@ def new_driver(c):
         R['brace'] = .25
     elif S['track'][10] < 50 and S['track'][10] > 20 and S['speedX'] > 60:
         R['brake'] = .5
-    
     if S['speedX'] < 50:
         R['brake'] = 0
-    # Automatic Transmission
-    if S['rpm'] > 8000:
-        R['gear'] = S['gear'] + 1
-    elif S['rpm'] < 2500:
-        R['gear'] = S['gear'] - 1
 
-    if R['gear'] < 1:
-        R['gear'] = 1
-
-    
     print("Steer: ", R['steer'])
+
 
 def ai_driver(c):
     S, R = c.S.d, c.R.d
@@ -178,22 +167,15 @@ def ai_driver(c):
     par.append(S['speedX'])
     par = par + S['track']
     print([par])
-    R['steer'] = nn.get_steering(par) 
-    R['accel'] = nn.get_acceleration(par)
-    R['brake'] = nn.get_brake(par)
-
-    # Automatic Transmission
-    if S['rpm'] > 8000:
-        R['gear'] = S['gear'] + 1
-    elif S['rpm'] < 2500:
-        R['gear'] = S['gear'] - 1
-
-    if R['gear'] < 1:
-        R['gear'] = 1
-
+    nn_actions = nn.get_all_actions_from_neural_net(par)
+    R['gear'] = automatic_transmission(R['gear'], S['rpm'])
+    R['steer'] = nn_actions[0]
+    R['accel'] = nn_actions[1]
+    R['brake'] = nn_actions[2]
     print("Steer: ", R['steer'])
     print("Accel: ", R['accel'])
     print("Brake: ", R['brake'])
+
 
 if __name__ == "__main__":
     print("===============================================")
@@ -212,4 +194,6 @@ if __name__ == "__main__":
             C.respond_to_server()
     C.shutdown()
     print("===============================================")
-    CsvWriter.write_csv_file(data_dict_lapTime, data_dict_angle, data_dict_speed, data_dict_track, data_dict_steer, data_dict_accel, data_dict_break, data_dict_trackpos, data_dict_rpm, data_dict_gear)
+    CsvWriter.write_csv_file(data_dict_lapTime, data_dict_angle, data_dict_speed, data_dict_track,
+                             data_dict_steer, data_dict_accel, data_dict_break, data_dict_trackpos, 
+                             data_dict_rpm, data_dict_gear)
