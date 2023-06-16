@@ -11,31 +11,20 @@ import pickle
 class Neuralnet():
     def __init__(self):
         with open("speedway1.1.pickle", "rb") as f: #
-            self.netACCELBRAKESTEER = pickle.load(f)
+            self.neural_network = pickle.load(f)
+
+    def get_all_actions_from_neural_net(self, input_data):
+        """Get all actions from the neural network like this: [steering, acceleration, brake]"""	
+        return self.neural_network.sim([input_data])[0]
 
     def get_steering(self, par):
-        return self.netACCELBRAKESTEER.sim([par])[0][0]
+        """Get steering from the neural network"""
+        return self.neural_network.sim([par])[0][0]
 
     def get_acceleration(self, par):
-        return self.netACCELBRAKESTEER.sim([par])[0][1]
+        """Get acceleration from the neural network"""
+        return self.neural_network.sim([par])[0][1]
 
     def get_brake(self, par):
-        return self.netACCELBRAKESTEER.sim([par])[0][2]
-    
-""" ADD THIS TO THE AGENT.PY !!!!"""
-
-# from neuralnet import Neuralnet
-
-""" ADD THIS TO THE FUNCTION def drive_example(c): """
-# par = []
-# par.append(S['angle'])
-# par.append(S['trackPos'])
-# par.append(S['speedX'])
-# par = par + S['track']
-# print([par])
-# R['steer'] = nn.get_steering(par) 
-# R['accel'] = nn.get_acceleration(par)
-# R['brake'] = nn.get_brake(par)
-
-
-
+        """Get brake from the neural network"""
+        return self.neural_network.sim([par])[0][2]
