@@ -146,5 +146,5 @@ class Network():
         print("error counts brake: ", error_counter_brake)
         return [error_counter_steering, error_counter_acceleration, error_counter_brake]
 
-net = Network('speedway1.1.csv')
+net = Network('file_name_of_your_trainingsdata.csv')
 net.train_net()
