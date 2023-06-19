@@ -20,6 +20,10 @@ The first dense layer has 23 neurons and second dense layer has 15 neurons.
 -   numpy
     -   `pip install numpy`
 
+### Install dependencies
+To install the dependencies you can use the following command:
+> `pip install -r requirements.txt`
+
 ## Download
 To download the code there are two options:
 -   Download the zip file from the github page and extract it, then copy the agent folder to where you want to run the agent.
@@ -39,6 +43,7 @@ The folder structure is the following:
 -   driver.py
 -   neuralnet.py
 -   server.py
+
 ## Usage
 To use this code you need to have installed all the dependencies listed above.
 Than you can run the code with the following command:
