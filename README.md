@@ -56,6 +56,12 @@ Than you can run the code with the following command:
 -   to start the agent with a custom host and port:
     > `python3 agent.py --host 192.168.2.1 --port 3002`
 
+It is also possible to run the agent with a docker container.
+There for a dockerfile is provided.
+- To build the docker image you can use the following command:
+    > `docker build --pull --rm -f "dockerfile" -t tinlabml_22-23:latest "."`
+- To run the docker image you can use the following command:
+    > `docker run --rm -it  tinlabml_22-23:latest`
 <br>
 
 ### Disclaimer
