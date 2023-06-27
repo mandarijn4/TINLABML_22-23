@@ -1,6 +1,12 @@
-version: '3'
+version: '3.3'
+
 services:
-  instance:
-    build: .
+
+  agent1:
+    image: agent:22231
+    restart: always
+    # Port mapping from host to container
     ports:
-      - "3001:3001"
+      - '3001:3001'
+    expose:
+      - '3001'
