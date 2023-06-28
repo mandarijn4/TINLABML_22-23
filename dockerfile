@@ -16,7 +16,7 @@ RUN conda update --all \
     && pip install --upgrade pip neurolab==0.3.5
 
 # Add runtime code
-ADD agent/*.py /opt/app/
+ADD agent/* /opt/app/
 
 EXPOSE 3001
 

@@ -6,7 +6,7 @@ class Neuralnet():
     by calling the functions of this class a response is given from the neural network"""
 
     def __init__(self):
-        with open("agent/neural_network", "rb") as f:
+        with open("neural_network", "rb") as f:
             self.neural_network = pickle.load(f)
 
     def get_all_actions_from_neural_net(self, input_data):

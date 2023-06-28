@@ -179,8 +179,8 @@ def ai_driver(c):
 
 if __name__ == "__main__":
     print("===============================================")
-    parser = argparse.ArgumentParser(description='Give the host and port to connect to server, default: localhost:3001')
-    parser.add_argument('--host', type=str, default='localhost', help='ip to connect to Server,   default: localhost')
+    parser = argparse.ArgumentParser(description='Give the host and port to connect to server, default: 192.168.56.20:3001')
+    parser.add_argument('--host', type=str, default='192.168.56.20', help='ip to connect to Server,   default: 192.168.56.20')
     parser.add_argument('--port', type=int, default=3001, help='Port to connect to Server, default: 3001')
     args = parser.parse_args()
     C = Client(H=args.host, p=args.port)
